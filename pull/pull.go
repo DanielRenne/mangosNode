@@ -1,9 +1,9 @@
 //Package push implements the pipeline pattern push node for mangos / nanomsg.
-package push
+package pull
 
 import (
 	"github.com/go-mangos/mangos"
-	"github.com/go-mangos/mangos/protocol/push"
+	"github.com/go-mangos/mangos/protocol/pull"
 	"github.com/go-mangos/mangos/transport/ipc"
 	"github.com/go-mangos/mangos/transport/tcp"
 )
@@ -14,31 +14,39 @@ type Node struct {
 	sock mangos.Socket
 }
 
+type ResponseHandler func([]byte)
+
 //Connect to a pull Server.
-func (self *Node) Connect(url string) error {
+func (self *Node) Pull(url string, handler ResponseHandler) error {
 
 	self.url = url
 
 	var err error
 
-	if self.sock, err = push.NewSocket(); err != nil {
+	if self.sock, err = pull.NewSocket(); err != nil {
 		return err
 	}
 	self.sock.AddTransport(ipc.NewTransport())
 	self.sock.AddTransport(tcp.NewTransport())
-	if err = self.sock.Dial(url); err != nil {
+	if err = self.sock.Listen(url); err != nil {
 		return err
 	}
+
+	go self.processData(handler)
 
 	return nil
 }
 
-//Push a message to a pull Server.
-func (self *Node) Push(payload []byte) error {
-	return self.sock.Send(payload)
-}
+//Handles the push responses.
+func (self *Node) processData(handler ResponseHandler) {
 
-//Closes the node connection.
-func (self *Node) Close() {
-	self.sock.Close()
+	var msg []byte
+	var err error
+
+	for {
+		if msg, err = self.sock.Recv(); err != nil {
+			continue
+		}
+		go handler(msg)
+	}
 }
