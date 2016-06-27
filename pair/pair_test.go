@@ -43,18 +43,11 @@ func TestPair(t *testing.T) {
 	msg := <-messages
 	log.Println(msg)
 
-	err = nodePairListener.Send([]byte("TestingPair2"))
-
-	if err != nil {
-		t.Errorf("Error sending message at pair_test.TestPair:  %v", err.Error())
-		return
-	}
-
 	msg2 := <-messages2
 	log.Println(msg2)
 }
 
-func handlePairResponse(msg []byte) {
+func handlePairResponse(node *Node, msg []byte) {
 
 	if string(msg) != "TestingPair1" {
 		tGlobal.Errorf("Failed to match the push response message at pair_test.handlePairResponse")
@@ -63,9 +56,16 @@ func handlePairResponse(msg []byte) {
 	}
 
 	messages <- "Test Client 1 Passed"
+
+	err := node.Send([]byte("TestingPair2"))
+
+	if err != nil {
+		tGlobal.Errorf("Error sending message at pair_test.handlePairRepsonse:  %v", err.Error())
+		return
+	}
 }
 
-func handlePairResponseConnection(msg []byte) {
+func handlePairResponseConnection(node *Node, msg []byte) {
 
 	if string(msg) != "TestingPair2" {
 		tGlobal.Errorf("Failed to match the push response message at pair_test.handlePairResponseConnection")

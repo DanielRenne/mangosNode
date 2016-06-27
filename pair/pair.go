@@ -14,7 +14,7 @@ type Node struct {
 	sock mangos.Socket
 }
 
-type ResponseHandler func([]byte)
+type ResponseHandler func(*Node, []byte)
 
 //Start a Listen Pair Node.
 func (self *Node) Listen(url string, handler ResponseHandler) error {
@@ -73,6 +73,6 @@ func (self *Node) processData(handler ResponseHandler) {
 		if msg, err = self.sock.Recv(); err != nil {
 			continue
 		}
-		go handler(msg)
+		go handler(self, msg)
 	}
 }
