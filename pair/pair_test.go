@@ -11,7 +11,7 @@ var tGlobal *testing.T
 var messages chan string
 var messages2 chan string
 
-func TestPush(t *testing.T) {
+func TestPair(t *testing.T) {
 	tGlobal = t
 	messages = make(chan string)
 	messages2 = make(chan string)
